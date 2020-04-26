@@ -19,10 +19,10 @@ class EvolutionSystem:
       self._population += children
 
 
-  def get_best_evolved_individuals(self, number_of_individuals=1):
+  def get_best_evolved_individual(self):
     self._calculate_fitness_scores()
     self._order_population_by_fitness_score()
-    return self._population[:number_of_individuals]
+    return self._population[0]
 
 
   def _initialize_population(self, number_of_individuals):

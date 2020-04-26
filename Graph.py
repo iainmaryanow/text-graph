@@ -58,10 +58,6 @@ class Graph:
     self._edges = {}
 
 
-  def draw(self, positions):
-    print('Graph')
-
-
   def _check_node_exists(self, node):
     if node not in self._edges:
       raise Exception('Node (%s) does not exist' % str(node))
