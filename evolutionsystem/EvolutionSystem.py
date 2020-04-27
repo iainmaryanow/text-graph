@@ -1,5 +1,6 @@
 from random import random, randint, gauss
 from evolutionsystem.Individual import Individual
+from Point import Point
 
 class EvolutionSystem:
   def __init__(self, fitness_fn, number_of_individuals=20, number_of_genes=10, probability_of_mutation=.25, mutation_deviation=2):
@@ -28,7 +29,7 @@ class EvolutionSystem:
   def _initialize_population(self, number_of_individuals):
     population = []
     for _ in range(number_of_individuals):
-      genes = [(randint(-9, 9), randint(-9, 9)) for _ in range(self._number_of_genes)]
+      genes = [Point(randint(-9, 9), randint(-9, 9)) for _ in range(self._number_of_genes)]
       population.append(Individual(genes))
     return population
 
@@ -72,8 +73,8 @@ class EvolutionSystem:
 
     if random() <= self._probability_of_mutation:
       gene_index = randint(0, self._number_of_genes-1)
-      allele1 = round(gauss(genes[gene_index][0], self._mutation_deviation))
-      allele2 = round(gauss(genes[gene_index][1], self._mutation_deviation))
-      genes[gene_index] = (allele1, allele2)
+      allele1 = round(gauss(genes[gene_index].x, self._mutation_deviation))
+      allele2 = round(gauss(genes[gene_index].y, self._mutation_deviation))
+      genes[gene_index] = Point(allele1, allele2)
 
     return Individual(genes)
