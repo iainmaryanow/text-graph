@@ -2,6 +2,17 @@ import math
 from Graph import Graph
 from evolutionsystem.EvolutionSystem import EvolutionSystem
 
+mapping = {
+  'Jeju': 0,
+  'Busan': 1,
+  'SeoulMetro': 2,
+  'Pohang': 3,
+  'Seoul': 4,
+  'Cheongju': 5,
+  'Sacheon': 6,
+  'Daegu': 7
+}
+
 def line_eq(point1, point2):
   if point2[0] - point1[0] == 0:
     return 9999, -9999
@@ -29,17 +40,6 @@ def lines_intersect(points1, points2):
 
 
 def get_intersecting_edges(solution, edges):
-  mapping = {
-    'Jeju': 0,
-    'Busan': 1,
-    'SeoulMetro': 2,
-    'Pohang': 3,
-    'Seoul': 4,
-    'Cheongju': 5,
-    'Sacheon': 6,
-    'Daegu': 7
-  }
-
   ls = set()
 
   for node1 in edges.keys():
@@ -82,6 +82,60 @@ def get_angle(points1, points2):
   angle1 = math.atan2(points1[0][1] - points1[1][1], points1[0][0] - points1[1][0])
   angle2 = math.atan2(points2[0][1] - points2[1][1], points2[0][0] - points2[1][0])
   return abs(math.degrees(abs(angle1) - abs(angle2)))
+
+
+def get_distances_to_lines(solution, edges):
+  ls = set()
+  for node1 in edges.keys():
+    for node2 in edges[node1]:
+      points = (solution[mapping[node1]], solution[mapping[node2]])
+      ls.add(points)
+
+  min_dist = float('inf')
+  dists = []
+  for pos in solution:
+    for points in ls:
+      if pos not in points:
+        dist = get_distance_to_line(pos, points)
+        dists.append(dist)
+        if dist < min_dist:
+          min_dist = dist
+
+  return (sum(dists) / len(dists), min_dist)
+
+
+def get_distance_to_line(point, line):
+  x = point[0]
+  y = point[1]
+
+  x1 = line[0][0]
+  y1 = line[0][1]
+
+  x2 = line[1][0]
+  y2 = line[1][1]
+
+  A = x - x1
+  B = y - y1
+  C = x2 - x1
+  D = y2 - y1
+
+  dot = A * C + B * D
+  len_sq = C * C + D * D
+  param = dot / len_sq
+
+  if param < 0: # Projection is off the line segment, closest to line[0]
+    xx = x1
+    yy = y1
+  elif param > 1: # Projection is off the line segment, closest to line[1]
+    xx = x2
+    yy = y2
+  else: # Projection is somewhere on the line segment
+    xx = x1 + param * C
+    yy = y1 + param * D
+
+  dx = x - xx
+  dy = y - yy
+  return math.sqrt(dx * dx + dy * dy) # Distance to closest point on line segment
   
 
 def print_grid(grid):
@@ -118,17 +172,6 @@ def draw_line(grid, start, end, char='*'):
 
 
 def draw(solution, edges, grid_size=50):
-  mapping = {
-    'Jeju': 0,
-    'Busan': 1,
-    'SeoulMetro': 2,
-    'Pohang': 3,
-    'Seoul': 4,
-    'Cheongju': 5,
-    'Sacheon': 6,
-    'Daegu': 7
-  }
-
   grid = []
   for i in range(grid_size):
     grid.append([])
@@ -166,14 +209,11 @@ def draw(solution, edges, grid_size=50):
 
 
 
-
 # TODO
 # Clean up
+# Fix edge angle only between intersecting edges, should be for two lines from same node
 # Incorporate into Graph
 # Figure out mapping between node and index
-# Add angles of edges in fitness
-# Do lines intersect after adjusting size of grid?
-# Line equation for infinite slope?
 # Use other repo for evolutionsystem
 if __name__ == '__main__':
   graph = Graph()
@@ -204,6 +244,7 @@ if __name__ == '__main__':
         if i != j and s1[0] == s2[0] and s1[1] == s2[1]:
           return 0
 
+    avg_dist_to_line, min_dist_to_line = get_distances_to_lines(solution, graph._edges)
     intersecting_edges = get_intersecting_edges(solution, graph._edges)
     dist, min_dist, median_dist = get_average_distance_between_nodes(solution)
 
@@ -211,7 +252,7 @@ if __name__ == '__main__':
     if len(intersecting_edges):
       median_angle = get_median_angle(intersecting_edges)
 
-    return (median_dist * median_angle) / (len(intersecting_edges) + 1)
+    return (median_dist * median_angle * avg_dist_to_line * min_dist_to_line * min_dist) / (len(intersecting_edges) + 1)
 
   number_of_individuals = 400
   number_of_genes = len(graph._edges.keys())
