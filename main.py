@@ -8,7 +8,7 @@ GRID_EMPTY = ' '
 GRID_SIDE_BORDER = '|'
 GRID_BOTTOM_BORDER = '─'
 GRID_TOP_BORDER = '_'
-GRID_LINE_CHARS = ['⌾', '○', '●', '⦵', '𐩑', '*', '+']
+GRID_LINE_CHARS = ['⌾', '○', '●', '⦵', '𐩑', '*', '+', '◇']
 
 mapping = {
   'Jeju': 0,
@@ -21,68 +21,51 @@ mapping = {
   'Daegu': 7
 }
 
-def get_intersecting_edges(solution, edges):
+def build_line_segments(solution, edges):
   lines = set()
   for node1 in edges.keys():
     for node2 in edges[node1]:
       lines.add(LineSegment(solution[mapping[node1]], solution[mapping[node2]]))
+  return lines
 
-  intersections = []
+
+def get_intersecting_edges(lines):
+  intersections = 0
   for line_1 in lines:
     for line_2 in lines:
+      # Dont consider intersecting if they start or end at the same point
       same = line_1 == line_2 or line_1.contains_point(line_2.point_1) or line_1.contains_point(line_2.point_2)
       if not same and line_1.is_intersecting(line_2):
-        intersections.append((line_1, line_2))
+        intersections += 1
 
   return intersections
 
 
 def get_average_distance_between_nodes(solution):
-  min_dist = float('inf')
-  dist = 0
-  dists = []
+  distances = []
   for point_1 in solution:
     for point_2 in solution:
       if point_1 != point_2:
-        distance = point_1.calculate_distance_to_point(point_2)
-        dist += distance
-        dists.append(distance)
-        if distance < min_dist:
-          min_dist = distance
-  return (dist / len(solution), min_dist, sorted(dists)[len(dists)//2])
+        distances.append(point_1.calculate_distance_to_point(point_2))
+  return sum(distances) / len(distances)
 
 
-def get_median_angle(solution, edges):
-  lines = set()
-  for node1 in edges.keys():
-    for node2 in edges[node1]:
-      lines.add(LineSegment(solution[mapping[node1]], solution[mapping[node2]]))
-
+def get_average_angle(lines):
   angles = []
   for line_1 in lines:
     for line_2 in lines:
       if line_1 != line_2 and line_1.contains_point(line_2.point_1) or line_1.contains_point(line_2.point_2):
           angles.append(line_1.calculate_angle_with_line(line_2))
-  return sorted(angles)[len(angles)//2]
+  return sum(angles) / len(angles)
 
 
-def get_distances_to_lines(solution, edges):
-  lines = set()
-  for node1 in edges.keys():
-    for node2 in edges[node1]:
-      lines.add(LineSegment(solution[mapping[node1]], solution[mapping[node2]]))
-
-  min_dist = float('inf')
-  dists = []
+def get_distances_to_lines(solution, lines):
+  distances = []
   for pos in solution:
     for line in lines:
       if not line.contains_point(pos):
-        dist = pos.calculate_distance_to_line_segment(line)
-        dists.append(dist)
-        if dist < min_dist:
-          min_dist = dist
-
-  return (sum(dists) / len(dists), min_dist)
+        distances.append(pos.calculate_distance_to_line_segment(line))
+  return sum(distances) / len(distances)
   
 
 def print_grid(grid):
@@ -139,15 +122,10 @@ def draw(solution, edges, grid_size=50):
     grid[y][x] = str(i)
 
   counter = 0
-  drawn = set()
-  for node1 in edges.keys():
-    for node2 in edges[node1]:
-      tup = tuple(sorted((node1, node2)))
-      if not tup in drawn:
-        line = LineSegment(scaled_solution[mapping[node1]], scaled_solution[mapping[node2]])
-        draw_line(grid, line, GRID_LINE_CHARS[counter])
-        drawn.add(tup)
-        counter = (counter+1) % len(GRID_LINE_CHARS)
+  lines = build_line_segments(scaled_solution, edges)
+  for line in lines:
+    draw_line(grid, line, GRID_LINE_CHARS[counter])
+    counter = (counter+1) % len(GRID_LINE_CHARS)
 
   print_grid(grid)
 
@@ -156,6 +134,7 @@ def draw(solution, edges, grid_size=50):
 # TODO
 # Clean up
 # Incorporate into Graph
+# Allow directed edges
 # Figure out mapping between node and index
 # Use other repo for evolutionsystem
 # verbose
@@ -183,18 +162,17 @@ if __name__ == '__main__':
   graph.add_edge('Seoul', 'Daegu', undirected=True)
   graph.add_edge('SeoulMetro', 'Daegu', undirected=True)
 
-  # Needs graph._edges
   def fitness_fn(solution):
-    avg_dist_to_line, min_dist_to_line = get_distances_to_lines(solution, graph._edges)
-    intersecting_edges = get_intersecting_edges(solution, graph._edges)
-    dist, min_dist, median_dist = get_average_distance_between_nodes(solution)
-    median_angle = get_median_angle(solution, graph._edges)
-    return (median_dist * median_angle * avg_dist_to_line * min_dist_to_line * min_dist) / (len(intersecting_edges) + 1)
+    lines = build_line_segments(solution, graph._edges)
+    average_distance_to_line = get_distances_to_lines(solution, lines)
+    intersecting_edges = get_intersecting_edges(lines)
+    average_distance_to_node = get_average_distance_between_nodes(solution)
+    average_angle = get_average_angle(lines)
+    return (average_angle * average_distance_to_line * average_distance_to_node) / (intersecting_edges + 1)
 
-
-  number_of_individuals = 400
+  number_of_individuals = 200
   number_of_genes = len(graph._edges.keys())
-  number_of_generations = 20
+  number_of_generations = 25
   p_mutation = .4
   mutation_dev = 3
 

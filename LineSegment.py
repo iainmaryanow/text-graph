@@ -21,9 +21,7 @@ class LineSegment:
 
 
   def contains_point(self, point):
-    is_point_1 = point.x == self.point_1.x and point.y == self.point_1.y
-    is_point_2 = point.x == self.point_2.x and point.y == self.point_2.y
-    return is_point_1 or is_point_2
+    return self.point_1 == point or self.point_2 == point
 
 
   def is_intersecting(self, line_segment):
