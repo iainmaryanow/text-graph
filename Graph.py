@@ -1,5 +1,6 @@
 class Graph:
   def __init__(self):
+    self._nodes = []
     self._edges = {}
 
 
@@ -7,6 +8,7 @@ class Graph:
     if node in self._edges:
       raise Exception('Node (%s) already exists' % str(node))
 
+    self._nodes.append(node)
     self._edges[node] = {}
     return self
 
