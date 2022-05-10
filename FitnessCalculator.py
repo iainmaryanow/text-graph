@@ -6,6 +6,12 @@ class FitnessCalculator:
   @staticmethod
   def fitness_fn_wrapper(graph):
 
+    # An example fitness function to determine if one graph is better than another.
+    #
+    # In this case, a graph that draws the nodes farther from each other while
+    # decreasing the number of intersecting lines between nodes, increasing the
+    # average angle between lines, and increasing the average distances between
+    # nodes and lines will be the best graph.
     def fitness_fn(potential_layout):
       lines = FitnessCalculator.build_line_segments(potential_layout, graph._edges, graph._nodes)
       average_distance_to_line = FitnessCalculator._get_distances_to_lines(potential_layout, lines)
@@ -25,6 +31,7 @@ class FitnessCalculator:
     for node1 in edges.keys():
       for node2 in edges[node1]:
         lines.add(LineSegment(layout[node_mapping[node1]], layout[node_mapping[node2]]))
+
     return lines
 
 
@@ -37,6 +44,7 @@ class FitnessCalculator:
         same = line_1 == line_2 or line_1.contains_point(line_2.point_1) or line_1.contains_point(line_2.point_2)
         if not same and line_1.is_intersecting(line_2):
           intersections += 1
+
     return intersections
 
 
@@ -47,6 +55,7 @@ class FitnessCalculator:
       for point_2 in layout:
         if point_1 != point_2:
           distances.append(point_1.calculate_distance_to_point(point_2))
+
     return sum(distances) / len(distances)
 
 
@@ -57,6 +66,7 @@ class FitnessCalculator:
       for line_2 in lines:
         if line_1.contains_point(line_2.point_1) or line_1.contains_point(line_2.point_2):
             angles.append(line_1.calculate_angle_with_line(line_2))
+
     return sum(angles) / len(angles)
 
 
@@ -67,4 +77,5 @@ class FitnessCalculator:
       for line in lines:
         if not line.contains_point(pos):
           distances.append(pos.calculate_distance_to_line_segment(line))
+
     return sum(distances) / len(distances)

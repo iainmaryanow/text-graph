@@ -13,6 +13,7 @@ class LineSegment:
 
     matches_point_1 = other.point_1 == self.point_1 or other.point_1 == self.point_2
     matches_point_2 = other.point_2 == self.point_1 or other.point_2 == self.point_2
+
     return matches_point_1 and matches_point_2
 
 

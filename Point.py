@@ -37,15 +37,18 @@ class Point:
     if percentage_onto_line_segment < 0: # Projection is off the line segment, closest to line_segment.point_1
       closest_x = x1
       closest_y = y1
+
     elif percentage_onto_line_segment > 1: # Projection is off the line segment, closest to line_segment.point_2
       closest_x = x2
       closest_y = y2
+
     else: # Projection is somewhere on the line segment
       closest_x = x1 + percentage_onto_line_segment * line_segment_x_diff
       closest_y = y1 + percentage_onto_line_segment * line_segment_y_diff
 
     x_diff = self.x - closest_x
     y_diff = self.y - closest_y
+
     return math.sqrt(x_diff**2 + y_diff**2) # Distance to closest point on line segment
 
 

@@ -7,6 +7,7 @@ from GraphDrawer import GraphDrawer
 # Use other repo for evolutionsystem
 # verbose
 # Completely draw line on vertical or horizontal
+# use full name for node
 if __name__ == '__main__':
   graph = Graph()
   graph.add_node('Jeju')
